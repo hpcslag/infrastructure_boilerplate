@@ -1,0 +1,6 @@
+---
+# This playbook contains common tasks to install basic Linux tooling.
+
+# Debian OR Ubuntu
+- include_tasks: setup-Debian.yml
+  when: ansible_os_family == 'Debian'

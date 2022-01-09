@@ -1,0 +1,101 @@
+---
+# This task creates user accounts necessary for app execution and deployment.
+
+# Variable setup.
+- name: Include OS-specific variables.
+  include_vars: "{{ ansible_os_family }}.yml"
+
+- name: Create deploy user
+  user:
+    name: "{{ deploy_user }}"
+    comment: Deploy
+    shell: /bin/bash
+    groups:
+      - "{{ sudo_group }}"
+      - "{{ nginx_user }}"
+
+- name: Create DB access user
+  user:
+    name: "{{ db_user }}"
+    comment: DB access without sudo
+    shell: /bin/bash
+    groups:
+      - "{{ nginx_user }}"
+
+- name: Make sure we have a 'wheel' group
+  group:
+    name: wheel
+    state: present
+
+- name: Allow 'wheel' group to have passwordless sudo
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: "^%wheel"
+    line: "%wheel ALL=(ALL) NOPASSWD: ALL"
+    validate: visudo -cf %s
+
+- name: Add sudoers users to wheel group
+  user:
+    name: "{{ item }}"
+    groups: wheel
+    append: yes
+  with_items:
+    - "{{ deploy_user }}"
+
+- name: Generate .my.cnf file for CLI access to DB
+  when: database_host is defined
+  template:
+    src: "{{ playbook_dir }}/templates/my.cnf.j2"
+    dest: "/home/{{ item }}/.my.cnf"
+    owner: "{{ item }}"
+    group: "{{ item }}"
+    mode: "0600"
+  loop:
+    - "{{ deploy_user }}"
+    - "{{ db_user }}"
+  ignore_errors: True
+
+- name: Import SSH keys from Github for deploy user
+  authorized_key:
+    user: deploy
+    key: "https://github.com/{{ item }}.keys"
+  loop: "{{ deploy_github_users }}"
+
+- name: Import SSH keys from Github for DB user
+  authorized_key:
+    user: "{{ db_user }}"
+    key: "https://github.com/{{ item }}.keys"
+  loop: "{{ deploy_github_users + db_github_users }}"
+
+- name: Create app user
+  user:
+    shell: /bin/bash
+    name: "{{ app_user }}"
+    comment: "{{ app_name }} service owner"
+    groups:
+      - "{{ nginx_user }}"
+
+- name: Create $HOME/.default-npm-packages file for deploy user
+  copy:
+    dest: "/home/{{ deploy_user }}/.default-npm-packages"
+    content: |
+      yarn
+
+- name: Disable root login over SSH
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: "^PermitRootLogin"
+    line: "PermitRootLogin no"
+    state: present
+  notify:
+    - Restart sshd
+
+- name: Disable password login
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: "^PasswordAuthentication"
+    line: "PasswordAuthentication no"
+    state: present
+  notify:
+    - Restart sshd

@@ -1,0 +1,6 @@
+---
+- name: looping over programs to install...
+  loop: '{{ ipfs_versions }}'
+  loop_control:
+    loop_var: ipfs_app
+  include_tasks: install-program.yml

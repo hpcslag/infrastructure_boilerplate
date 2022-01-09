@@ -1,0 +1,23 @@
+---
+- name: Restart systemd unit
+  systemd:
+    name: "{{ app_name }}"
+    state: restarted
+  ignore_errors: True
+
+- name: Reload daemons
+  systemd:
+    daemon_reload: true
+  ignore_errors: True
+
+- name: Restart services
+  command: "systemctl restart '{{ app_name }}'"
+  ignore_errors: True
+
+- name: Restart workers
+  command: "systemctl restart '{{ worker_unit_name }}@*' --all"
+  ignore_errors: True
+
+- name: Reload font cache
+  command: "fc-cache -f"
+  ignore_errors: True

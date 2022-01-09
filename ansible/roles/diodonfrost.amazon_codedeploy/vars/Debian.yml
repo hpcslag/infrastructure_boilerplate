@@ -1,0 +1,12 @@
+---
+# Variable for Debian system
+
+# Define java version to use
+package_requirements: '{%- if ansible_distribution == "Ubuntu" and ansible_distribution_version == "14.04" -%}
+                          ruby2.0
+                       {%- else -%}
+                          ruby
+                       {%- endif -%}'
+
+default_codedeploy_install_script_url: "https://aws-codedeploy-{{ aws_region }}.s3.{{ aws_region }}.amazonaws.com/latest/install"
+default_codedeploy_install_script_dest: /tmp/codedeploy

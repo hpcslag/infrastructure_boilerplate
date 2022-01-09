@@ -1,0 +1,5 @@
+---
+
+additional_packages: []
+
+apt_golang_dependencies: ["build-essential"]

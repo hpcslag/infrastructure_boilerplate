@@ -1,0 +1,46 @@
+---
+# This playbook contains common tasks to install basic Linux tooling on Ubuntu.
+
+- name: Install commonly used command-line tools
+
+  apt:
+    update_cache: true
+    pkg:
+      - mc
+      - silversearcher-ag
+      - vim
+      - git
+      - wget
+      - curl
+      - acl
+      - htop
+      - pandoc
+      - build-essential
+
+- name: Install additional packages
+  apt:
+    state: present
+    pkg: "{{ additional_packages }}"
+
+- name: Install Golang build dependencies
+  apt:
+    state: present
+    pkg: "{{ apt_golang_dependencies }}"
+
+# https://confluence.jetbrains.com/display/IDEADEV/Inotify+Watches+Limit
+- name: Set max_user_watches
+  register: max_user_watches_changed
+  lineinfile: >
+    create=yes
+    dest=/etc/sysctl.d/60-user.conf
+    group=root
+    line="fs.inotify.max_user_watches = 524288"
+    mode="0644"
+    owner=root
+    regexp="^fs.inotify.max_user_watches"
+    state=present
+
+- name: Reload max_user_watches setting
+  command: sysctl -p
+  when: max_user_watches_changed is changed
+

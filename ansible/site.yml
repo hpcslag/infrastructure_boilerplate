@@ -1,0 +1,62 @@
+---
+# This playbook is intended to install all the necessary dependencies of the
+# application and set the remote server up for development
+
+- name: Create user accounts for deployment and execution
+  hosts: all
+  remote_user: "{{ user_name }}"
+  become: true
+  tags: 
+    - users
+    - install
+
+  roles:
+    - users
+
+- name: Install CodeDeploy agent
+  hosts: all
+  remote_user: "{{ user_name }}"
+  become: true
+  tags: 
+    - codedeploy
+    - install
+
+  roles:
+    - diodonfrost.amazon_codedeploy
+
+
+- name: Tune journald settings
+  hosts: all
+  remote_user: "{{ user_name }}"
+  become: true
+  tags: 
+    - journal
+    - install
+
+  roles:
+    - stuvusit.systemd-journald
+
+
+- name: Install software
+  hosts: all
+  remote_user: "{{ user_name }}"
+  become: true
+  tags: 
+    - deps # ansible-playbook -v site.yml --tags deps can make install to target machine
+    - install
+
+  roles:
+    - common
+
+- name: Prepare Golang Service
+  hosts: all
+  remote_user: "{{ user_name }}"
+  become: true
+  tags: 
+    - deps # ansible-playbook -v site.yml --tags deps can make install to target machine
+    - install
+
+  roles: 
+    - role: gantsign.golang
+      golang_gopath: '$HOME/workspace-go'
+      golang_version: '1.17'

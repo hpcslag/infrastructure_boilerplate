@@ -1,0 +1,80 @@
+---
+# Perform common tasks required for deploying a systemd service
+
+- name: Ensure service directory exists
+  file:
+    path: "/usr/local/lib/{{ app_name }}"
+    state: directory
+    owner: "{{ deploy_user }}"
+    group: "{{ app_user }}"
+    mode: '0755'
+
+- name: Ensure releases directory exists
+  file:
+    path: "/usr/local/lib/{{ app_name }}/releases"
+    state: directory
+    owner: "{{ deploy_user }}"
+    group: "{{ app_user }}"
+    mode: '0755'
+
+- name: Ensure build directory exists
+  file:
+    path: "/home/{{ deploy_user }}/build"
+    state: directory
+    owner: "{{ deploy_user }}"
+    group: "{{ deploy_user }}"
+    mode: '0755'
+
+- name: Ensure configuration directory exists
+  file:
+    path: "/usr/local/etc/{{ app_name }}"
+    state: directory
+    owner: "{{ deploy_user }}"
+    group: "{{ app_user }}"
+    mode: '0755'
+
+- name: Ensure NGINX access log directory exists
+  file:
+    path: "/var/log/{{ app_name }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Ensure the directory for SSL certificates exists
+  when: app_domain_name is defined
+  file:
+    path: "{{ ssl_certificate_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0700'
+
+- name: Set httpd_can_network_connect flag on and keep it persistent across reboots
+  when: ansible_os_family == 'RedHat'
+  ansible.posix.seboolean:
+    name: httpd_can_network_connect
+    state: yes
+    persistent: yes
+
+- name: Permit HTTPS traffic in firewalld
+  when: ansible_os_family == 'RedHat'
+  ansible.posix.firewalld:
+    service: https
+    permanent: yes
+    state: enabled
+
+- name: Permit HTTP traffic in firewalld
+  when: ansible_os_family == 'RedHat'
+  ansible.posix.firewalld:
+    service: http
+    permanent: yes
+    state: enabled
+
+- name: Create HTML root for client app
+  file:
+    path: "{{ client_html_root }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'

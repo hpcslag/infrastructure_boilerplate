@@ -1,0 +1,29 @@
+---
+- name: Debian | Update apt cache
+  apt:
+    update_cache: yes
+  changed_when: false
+  when: ansible_os_family == "Debian"
+
+- name: Linux | Install package requirements
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items: "{{ package_requirements }}"
+
+- name: Linux | Download CodeDeploy
+  get_url:
+    url: "{{ codedeploy_install_script_url }}"
+    dest: "{{ codedeploy_install_script_dest }}"
+    mode: '0750'
+
+- name: Linux | Install CodeDeploy
+  command: "{{ codedeploy_install_script_dest }} auto"
+  args:
+    creates: /opt/codedeploy-agent/bin/codedeploy-agent
+
+- name: Linux | CodeDeploy service
+  service:
+    name: codedeploy-agent
+    state: started
+    enabled: yes

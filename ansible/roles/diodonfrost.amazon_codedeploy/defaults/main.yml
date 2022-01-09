@@ -1,0 +1,11 @@
+---
+# defaults file for ansible-role-amazon-codedeploy
+
+# Aws region where to download CodeDeploy install script
+aws_region: eu-west-1
+
+# Complete url where to download CodeDeploy install script
+codedeploy_install_script_url: "{{ default_codedeploy_install_script_url }}"
+
+# Where to store codedeploy agent install script
+codedeploy_install_script_dest: "{{ default_codedeploy_install_script_dest }}"
