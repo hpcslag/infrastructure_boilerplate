@@ -20,3 +20,19 @@ the module already contains:
  - server_with_rds
  - web
 
+## Initialize
+
+The project is initialize by terragrunt, please enter command:
+
+```
+terragrunt init
+```
+
+## Apply setting
+
+```
+terraform init
+terraform plan -var-file=vars/common.yml
+terraform apply
+```
+
