@@ -1,6 +1,10 @@
 # terraform_module
 my terraform module for reference
 
+# First time setup
+
+must setup by `terragrunt init`, terragurnt will auto create `backend.tf`, `provider.tf`
+
 # Terraform Commands
 
 `**terraform init**`: if using any new module in `main.tf`, then needs to run `terraform init` first.

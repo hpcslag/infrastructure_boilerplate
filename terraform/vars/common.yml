@@ -1,0 +1,15 @@
+---
+project_name: # project_name
+aws_region: # us-east-2
+aws_profile: default # profile is in ~/.aws/config: [profile] xxxx
+deployer_key: "ssh-rsa __sshkey__= user@xxxx"
+
+env: staging
+
+# for s3 websites
+environments: ["production", "staging"]
+
+# for dns record
+cloudflare_email:   "xxxxxx"
+cloudflare_api_key: "xxxxxx"
+cloudflare_zone_id: "xxxxxx"
