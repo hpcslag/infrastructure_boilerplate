@@ -1,0 +1,10 @@
+{% extends 'roles/geerlingguy.nginx/templates/nginx.conf.j2' %}
+
+{% block http_upstream %}
+    upstream node {
+      ip_hash;
+      {% for n in range(worker_count) %}
+server 127.0.0.1:{{ app_port + n }};
+      {% endfor %}
+}
+{% endblock %}

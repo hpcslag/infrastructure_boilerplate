@@ -1,0 +1,96 @@
+---
+nginx_ssl_ciphers: "EECDH+ECDSA+AESGCM:EECDH+aRSA+AESGCM:EECDH+ECDSA+SHA512:EECDH+ECDSA+SHA384:EECDH+ECDSA+SHA256:ECDH+AESGCM:ECDH+AES256:DH+AESGCM:DH+AES256:RSA+AESGCM:!aNULL:!eNULL:!LOW:!RC4:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS"
+nginx_ssl_versions: "TLSv1.3 TLSv1.2"
+ssl_certificate_path: "/etc/ssl/certs/MY_PROJECT_NAME"
+ssl_certificate_file_basename: "{{ ssl_certificate_path }}/my_domain.com"
+enable_ssl: "{{ (app_domain_names | length > 0) }}"
+
+# We are setting up upstream inside the conf template because it is
+# difficult to generate valid config using variables
+nginx_conf_template: "{{ playbook_dir }}/templates/nginx.conf.j2"
+
+nginx_remove_default_vhost: true
+
+nginx_proxy_options: |
+  proxy_http_version 1.1;
+  proxy_set_header Host $host;
+  proxy_set_header Upgrade $http_upgrade;
+  proxy_set_header Connection "upgrade";
+  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+nginx_ssl_fragment: |
+  ssl on;
+  ssl_certificate {{ ssl_certificate_file_basename }}_CER.crt;
+  ssl_certificate_key {{ ssl_certificate_file_basename }}_KEY.key;
+  ssl_client_certificate {{ ssl_certificate_file_basename }}_CA.crt;
+  ssl_verify_client optional;
+  ssl_protocols {{ nginx_ssl_versions }};
+  ssl_session_timeout 1d;
+  ssl_session_cache shared:SSL:50m;
+  ssl_ciphers {{ nginx_ssl_ciphers }};
+  ssl_prefer_server_ciphers on;
+  ssl_ecdh_curve secp384r1;
+
+outport: "{{ 443 if enable_ssl else 80 }}"
+
+nginx_vhosts:
+  - listen: "80"
+    filename: "{{ app_name }}_http.vhost.conf"
+    server_name: "*.my_domain.com"
+    state: "{{ 'present' if enable_ssl else 'absent' }}"
+    extra_parameters: |
+      return 301 https://$host$request_uri;
+
+  - listen: "{{ outport }} default_server"
+    filename: "{{ app_name }}.vhost.conf"
+    server_name: "{{ (app_domain_names | join(' ')) if (app_domain_names | length > 0) else '_' }}"
+    access_log: "/var/log/{{ app_name }}/access.log"
+    error_log: "/var/log/{{ app_name }}/error.log"
+    root: "{{ client_html_root }}"
+    state: present
+    extra_parameters: |
+      client_max_body_size 20m;
+
+      {% if enable_ssl %}{{ nginx_ssl_fragment }}{% endif %}
+
+      location / {
+          try_files $uri $uri/ /index.html =404;
+          gzip_static on;
+      }
+
+      location = / {
+          expires off;
+      }
+
+      location = /index.html {
+          expires off;
+      }
+
+      location ~* \.[0-9a-f]\.(?:js|css|gif|jpe?g|png)$ {
+          expires 1y;
+      }
+
+      location ~* ^/app {
+          proxy_pass http://localhost:8000;
+          expires off;
+          {{ nginx_proxy_options | indent(4) }}
+      }
+
+  - listen: "{{ outport }} default_server"
+    filename: "{{ app_name }}.vhost.conf"
+    server_name: "graph.niimferworld.com"
+    access_log: "/var/log/{{ app_name }}/access.log"
+    error_log: "/var/log/{{ app_name }}/error.log"
+    root: "{{ client_html_root }}"
+    state: present
+    extra_parameters: |
+      sendfile on;
+      tcp_nopush on;
+      tcp_nodelay on;
+      keepalive_timeout 65;
+      types_hash_max_size 2048;
+      client_max_body_size 100M;
+
+      location / {
+        proxy_pass http://localhost:8000;
+      }
