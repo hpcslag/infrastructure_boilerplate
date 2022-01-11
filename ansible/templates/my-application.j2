@@ -1,0 +1,27 @@
+[Unit]
+Description=Service unit for my application
+After=local-fs.target network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/usr/local/lib/my-application
+
+{% if inventory_hostname == "production_1" %}
+ExecStart=yarn start
+{% elif inventory_hostname == "staging_1" %}
+ExecStart=yarn dev
+{% else %}
+# Please modify my-application.j2 for new case of inventory_hostname
+{% endif %}
+
+
+LimitNOFILE=65535
+UMask=0027
+SyslogIdentifier=my-application
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

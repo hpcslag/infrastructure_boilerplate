@@ -5,8 +5,8 @@
     - Reload daemons
     - Restart systemd unit
   template:
-    src: "{{ playbook_dir }}/templates/xxxxxxxxx.j2"
-    dest: "/etc/systemd/system/{{ app_name }}.service" # change app_name in vars all to make change in this dest
+    src: "{{ playbook_dir }}/templates/my-application.j2"
+    dest: "/etc/systemd/system/my-application.service"
     owner: root
     group: root
     mode: "0755"
@@ -14,6 +14,12 @@
 - name: Enable service unit
   when: service_unit_added is changed
   systemd:
-    name: {{ app_name }}
+    name: my-application
     enabled: yes
-    daemon_reload: yes
+
+- name: Reload daemons
+  systemd:
+    daemon_reload: true
+
+- name: Enable service unit
+  command: "systemctl restart my-application"

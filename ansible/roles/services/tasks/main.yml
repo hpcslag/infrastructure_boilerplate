@@ -1,3 +1,6 @@
 ---
 # This role creates file structures and systemd units necessary for service deployment.
 - include_tasks: common.yml
+
+- include_tasks: service-my-application.yml
+  when: app_type == 'my-application'
