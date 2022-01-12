@@ -1,0 +1,13 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: # 這邊的name很重要提供其他文件configMapRef的名稱
+  namespace: # 命名空間
+data:
+  S3_REGION: "us-east-2"
+  RABBIT_PORT: "5672"
+  RABBIT_VHOST: "vhostname"
+  RABBIT_USER: "user"
+  RABBIT_PASSWORD: "your_password"
+  DATABASE_NAME: "db_name"
