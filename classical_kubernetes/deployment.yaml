@@ -1,0 +1,39 @@
+# 你的應用程式的佈署
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: # deployment name
+ namespace: # your namespace
+spec:
+ replicas: 2 
+ strategy:
+  rollingUpdate: # update type, if using Recreating, please remove this node yaml describe
+   maxSurge: 1
+   maxUnavailable: 0
+ selector:
+  matchLabels:
+   app: # app pod name
+ template:
+  metadata:
+   name: # template name
+   namespace: # namespace
+   labels:
+    app: # # app pod name
+  spec:
+   containers:
+   - image: xxxx/xxxx:latest
+     name: # app pod name
+     envFrom:
+      - configMapRef:
+          name: # configmap name: check config.yaml file
+      - secretRef:
+          name: # secret name: check secret.yaml file
+     ports:
+      - name: http
+        containerPort: 8080 # your container app expose port
+     #readinessProbe:
+     # periodSeconds: 1
+     # httpGet:
+     #  path: /
+     #  port: 8080   
