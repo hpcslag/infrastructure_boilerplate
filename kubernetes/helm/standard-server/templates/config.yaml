@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.app_name }}-config # xxxx-config
+  labels:
+    group: {{ .Values.app_name }}
+data:
+  {{- toYaml .Values.app_configs | nindent 2 }}
+  # DATABASE_NAME: "xxxxxxxxxxx"
+  # S3_REGION: "xxxxxxxxxxxxxx"
+  # REDIS_ADDR: "redis-leader" # FQDN: http://redis-leader
+  # REDIS_PASSWORD: "xxxxxxx"
+  # REDIS_PORT: "6379"  
+  # DATABASE_HOST: "xxxxxx"
+  # DATABASE_PORT: "5432"
