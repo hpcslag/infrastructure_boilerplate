@@ -1,0 +1,25 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ .Values.app_name }}-ingress # xxxx-ingress
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    external-dns.alpha.kubernetes.io/hostname: {{ .Values.domain_name }} # route53 domain name
+    # alb.ingress.kubernetes.io/target-type: ip # ip nlb
+    
+    # SSL Setting
+    # https://aws.amazon.com/premiumsupport/knowledge-center/terminate-https-traffic-eks-acm/
+    # https://www.stacksimplify.com/aws-eks/aws-alb-ingress/learn-to-enable-ssl-on-alb-ingress-service-in-kubernetes-on-aws-eks/
+    # Must issue first on aws
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}, {"HTTP":80}]'
+    alb.ingress.kubernetes.io/certificate-arn: {{ .Values.certificate_arn }}
+spec:
+  rules:
+    - host: {{ .Values.reverse_proxy_hostname }} # custom domain name
+      http:
+        paths:
+          - path: /*
+            backend:
+              serviceName: {{ .Values.app_name }}-service # xxxx-service
+              servicePort: 80
