@@ -1,0 +1,21 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: # your ingress name
+  namespace: # your namespace
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    external-dns.alpha.kubernetes.io/hostname: api.xxx.com # route 53 binding
+    # alb.ingress.kubernetes.io/target-type: ip # ip nlb
+    # alb.ingress.kubernetes.io/subnets: subnet-xxxx,subnet-xxxx
+    # alb.ingress.kubernetes.io/tags: Environment=dev,Team=test
+spec:
+  rules:
+    - host: api.xxx.com # you can think this is nginx setting, must match the DNS name can get in
+      http:
+        paths:
+          - path: /*
+            backend:
+              serviceName: # bind the service, service that need to reflect port 80
+              servicePort: 80
